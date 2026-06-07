@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Support Chatbot</title>
+  <style>
+    body { font-family: Arial; background: #f4f4f4; }
+    #chat { width: 400px; margin: 50px auto; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+    .msg { margin: 5px 0; padding: 5px 10px; border-radius: 5px; }
+    .user { background: #d0e7ff; text-align: right; }
+    .bot { background: #d0ffd6; text-align: left; }
+    #input { width: 300px; padding: 5px; }
+    button { padding: 5px 10px; }
+  </style>
+</head>
+<body>
+
+<div id="chat">
+  <div id="messages"></div>
+  <input id="input" placeholder="Type your message..." />
+  <button onclick="send()">Send</button>
+</div>
+
+<script>
+function send() {
+  let input = document.getElementById("input");
+  let msg = input.value.trim();
+  if (!msg) return;
+
+  const messagesDiv = document.getElementById("messages");
+
+  // Show user message immediately
+  messagesDiv.innerHTML += `<div class='msg user'>You: ${msg}</div>`;
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+  // Clear input
+  input.value = "";
+  input.focus();
+
+  // Add a temporary "typing" message
+  const typingDiv = document.createElement("div");
+  typingDiv.className = "msg bot typing";
+  typingDiv.textContent = "Bot is typing...";
+  messagesDiv.appendChild(typingDiv);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+  // Send message to backend
+  fetch("/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: msg })
+  })
+  .then(res => res.json())
+  .then(data => {
+    // Remove typing message
+    typingDiv.remove();
+
+    // Add actual bot reply
+    const botDiv = document.createElement("div");
+    botDiv.className = "msg bot";
+    botDiv.textContent = "Bot: " + data.reply;
+    messagesDiv.appendChild(botDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  })
+  .catch(err => {
+    typingDiv.textContent = "Bot: Error sending message.";
+  });
+}
+
+
+</script>
+
+</body>
+</html>
